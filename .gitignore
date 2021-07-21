@@ -1,0 +1,9 @@
+.env
+*.log
+ssl/
+*.pem
+.vscode
+__pycache__/
+.env.yaml
+electrosetenv/
+
