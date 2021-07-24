@@ -3,8 +3,12 @@
 ## Basic Setup (Twitter account, code)
 The basic setup is very similar to the setup explained in detail [here](https://followtheargument.org/how-to-create-a-twitter-bot-that-posts-a-random-daily-article). Check out this tutorial in order to learn how to set up a Twitter developer account and what the different parts of the code do. 
 
+A quick primer on how to parse a googlesheet, can be seen [here](https://stackoverflow.com/questions/61152242/how-to-obtain-data-from-a-public-google-sheets-using-python). 
+
+<!-- 
+The current version doesn't use SQL anymore
 ## Setting up the database
-The data is stored in a Google Cloud MySQL database, but you can actually use any text file on your local machine as well. To learn more about how to set up a Google Cloud MySQL database, check [this](https://towardsdatascience.com/sql-on-the-cloud-with-python-c08a30807661) tutorial out. 
+The data is stored in a Google Cloud MySQL database, but you can actually use any text file on your local machine as well. To learn more about how to set up a Google Cloud MySQL database, check [this](https://towardsdatascience.com/sql-on-the-cloud-with-python-c08a30807661) tutorial out.  -->
 
 ## Setting up the serverless bot
 The tutorial I used to set up the serverless bot is [this one](https://www.cookieshq.co.uk/posts/how-to-build-a-serverless-twitter-bot-with-python-and-google-cloud)

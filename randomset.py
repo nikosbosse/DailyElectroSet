@@ -1,54 +1,83 @@
 import random
-import mysql.connector
-from mysql.connector.constants import ClientFlag
 from dotenv import load_dotenv
 import os
 import pandas as pd
+import requests as rs
+import numpy as np
+from bs4 import BeautifulSoup
+import requests
+from link_preview import link_preview
 
 class randomset: 
-    def __init__(self): 
-        # load stored password
-        load_dotenv()
-        MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
-
-        # database config
-        self.config = {
-            'user': 'root',
-            'password': MYSQL_PASSWORD,
-            'host': '104.198.24.234',
-            'client_flags': [ClientFlag.SSL],
-            'ssl_ca': 'server-ca.pem',
-            'ssl_cert': 'client-cert.pem',
-            'ssl_key': 'client-key.pem',
-            'database': 'dailyelectroset'
-        }
+    def __init__(self):         
+        # URL of google sheet
+        self.sheet_url = 'https://docs.google.com/spreadsheets/d/1LNaVwIkU3hucJ707kw_vH5T0Xac6PSWSu14lSjayPto/edit#gid=0'
 
     def get_random_set(self):
-        # establish connection and initialize cursor
-        cnxn = mysql.connector.connect(**self.config)
-        cursor = cnxn.cursor()
+        # get the website using requests
+        html = requests.get(self.sheet_url).text
 
-        # read data from database
-        query = "SELECT URL, Description FROM electrosets"
-        cursor.execute(query)
-        allsets = pd.DataFrame(cursor.fetchall())
+        # parse the website and find all tables
+        soup = BeautifulSoup(html, "lxml")
+        tables = soup.find_all("table")
 
-        column_names = [i[0] for i in cursor.description]
-        allsets.columns = column_names
+        # define output list, than iterate over existing tables (unsure why it finds more than one)
+        out = []
+        for table in tables:
+            # define an empty list that gets then filled with row entries
+            l = []
+            table_rows = table.find_all('tr')
+            for tr in table_rows:
+                td = tr.find_all('td')
+                row = [tr.text for tr in td]
+                l.append(row)
+            
+            # after iteration has finished, convert to DataFrame and append to output
+            df = pd.DataFrame(l)
+            out.append(df)
 
-        # select a random set from all sets
-        all_set_urls = allsets['URL']
+        # put all outputs together (this should merge a filled with an empty DataFrame)
+        out = pd.concat(out)
+
+        # get the urls as the first colums and filter out everything that doesn't have https in it
+        all_set_urls = out.iloc[:, 0].tolist()
+        all_set_urls = [x for x in all_set_urls if "https" in str(x)]
+
         self.randomseturl = random.choice(all_set_urls)
 
-        # close connection
-        cnxn.close()  
+    def download_title(self): 
+        try:
+            # get a preview based on the link
+            dict_elem = link_preview.generate_dict(self.randomseturl) # this is a dict()
+
+            # Access title and clean formatting
+            title = dict_elem['title']
+            self.title = title.replace("&amp;", "&")
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
+    
+
+    def download_title_image(self, filename):
+        try:
+            # get a preview based on the link
+            dict_elem = link_preview.generate_dict(self.randomseturl) # this is a dict()
+
+            # acces preview image URL and downlaod
+            image = dict_elem['image']
+            request = requests.get(image)
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(e)
+        with open(filename, "wb") as image:
+            image.write(request.content)
 
     def write_tweet(self):
         message = [
             "Let music brighten your life with a randomly selected high-quality electro set every day!",
             " ",
+            f"Today's set is: {self.title}",
+            f"{self.randomseturl}",
+            " ",
             "Enjoy! \U0001F680 \U0001F31F \U0001F389",
-            f"{self.randomseturl}"
         ]
         message = " \n".join(message)
         return message 

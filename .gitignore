@@ -6,4 +6,5 @@ ssl/
 __pycache__/
 .env.yaml
 electrosetenv/
-
+*.json
+key-file
